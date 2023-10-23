@@ -1,1 +1,45 @@
+import re
+
+## A function to read the .txt file provided by the Parr software and return a list of temperatures
+# and run time (seconds)
+
+def temperature_profile_converter(input_file):
+        with open(input_file, 'r') as file:
+            text = file.read()
+
+        # Define a regular expression pattern to match both time stamp formats
+        time_stamp_pattern = r'\s?\d{1,2}:\s?\d{1,2}:\s?\d{1,2}'
+        # Use re.findall to find all matching time stamps in the text
+        time_stamps = re.findall(time_stamp_pattern, text)
+
+        def time_to_seconds(time_str):
+            hours, minutes, seconds = map(int, time_str.split(':'))
+            return (hours * 3600) + (minutes * 60) + seconds
+
+        # Calculate the time difference in seconds
+        time_diff = 1  # Adjust this value to match your time stamps
+
+        # Convert the time stamps to seconds
+        time = [0]  # Initialize with 0
+        time += [time_to_seconds(ts) - time_to_seconds(time_stamps[0]) for ts in time_stamps[1:]]
+
+        # Adjust the time values according to the 5-second interval
+        time = [t * time_diff for t in time]
+
+        # Read the first column of data from the text file (excluding the header)
+        temp = []
+        with open(input_file, 'r') as file:
+            lines = file.readlines()
+            for line in lines[1:]:
+                # Split the line by spaces or tabs and take the first value
+                values = line.strip().split()
+                if values:
+                    temp.append(float(values[0]))
+        return time, temp
+
+
+
+
+
+
 
