@@ -1,0 +1,98 @@
+import matplotlib.pyplot as plt
+import re
+import numpy as np
+
+from temperature_profile_converter import *
+
+# Input file (space-delimited text file)
+input_file = "Temp_250_5s.txt"
+target_temp = 250
+
+time,temp = temperature_profile_converter(input_file)
+
+# Heating times
+count = 0
+second_index = None
+# Iterate through the list
+for index, item in enumerate(temp):
+    if item >= target_temp and count == 0:
+        target_time = time[temp.index(item)]
+        count += 1
+    elif item <= target_temp and count == 1:
+            second_index = index
+            target_time_2 = time[second_index]
+            target_temp_2 = item
+            stable_temp = temp[second_index:]
+            stable_time = time[second_index:]
+            break
+        
+# Define the cooling zone that we want to include in the plot
+deg_cool = 3 #sub_cooled degrees below target
+
+for index, temp in enumerate(stable_temp):
+    if temp <= (target_temp-deg_cool):
+        stable_temp = stable_temp[:index]  
+        stable_time = stable_time[:index]
+        
+# format x axis units
+total_time_mins = np.array(stable_time)/60
+stable_time_mins = total_time_mins-(total_time_mins[0])
+
+
+
+
+# define the x axis and y axis
+x = np.array(total_time_mins)
+y = np.array(stable_temp)
+
+
+# Calculate the error
+percent_error = abs(((y - target_temp) / y) * 100)
+mean_percent_error = np.mean(percent_error)
+print(mean_percent_error)
+
+# Calculate the areas
+area_above = np.trapz(y[y > target_temp] - target_temp, x[y > target_temp])
+# Calculate the area below the target temperature
+area_below = np.trapz(target_temp - y[y < target_temp], x[y < target_temp])
+
+total_area = area_below + area_above
+
+
+rgb = {
+    'red':(1,0,0),
+    'grey':(0.4,0.1,0.8),
+    'lightgrey':(0.3,0.8,0.8)
+    }
+
+                           
+# Create a simple line plot
+fig, ax = plt.subplots()
+ax.axhline(y=target_temp, color='grey', linestyle=':', lw=2, label = 'Target Temperature ('+str(target_temp)+'°C)')
+
+# Show the plot
+ax.plot(x,y,label ='profile',color=rgb['red'],lw=2)
+
+
+ax.fill_between(x, y, target_temp, where=(y > target_temp), interpolate=True, color=rgb['grey'], alpha=0.3) # apha is the transpareny
+ax.fill_between(x, y, target_temp, where=(y < target_temp), interpolate=True, color=rgb['lightgrey'], alpha=0.3)
+plt.xlabel('Total Time (mins)')
+plt.ylabel('Temperature (°C)')
+plt.title('Temperature versus Time (mean percentage error of '+str(round(mean_percent_error,2))+'%)')
+
+
+plt.legend()
+plt.show()
+
+# =============================================================================
+# x2 = ['below','above']
+# plt.bar(x2,[area_below,area_above])
+# =============================================================================
+
+
+
+
+
+
+
+
