@@ -1,0 +1,57 @@
+import matplotlib.pyplot as plt
+import re
+
+from temperature_profile_converter import *
+
+# Input file (space-delimited text file)
+input_file = "Temp_250_5s.txt"
+target_temp = 250
+
+time,temp = temperature_profile_converter(input_file)
+
+# Heating times
+count = 0
+second_index = None
+# Iterate through the list
+for index, item in enumerate(temp):
+    if item >= target_temp and count == 0:
+        target_time = time[temp.index(item)]
+        count += 1
+    elif item <= target_temp and count == 1:
+            second_index = index
+            target_time_2 = time[second_index]
+            target_temp_2 = item
+            break
+        
+                           
+# Create a simple line plot
+fig, ax = plt.subplots()
+ax.axhline(y=target_temp, color='grey', linestyle=':', lw=1, label = 'Target Temperature ('+str(target_temp)+'°C)')
+ax.axvline(x=target_time_2, color='pink', linestyle=':', lw=1, label = 'Stabilisation Time ('+str(target_time_2)+' s)')
+
+# Add axis labels and a title
+plt.xlabel('Time (s)')
+plt.ylabel('Temperature (°C)')
+plt.title('Temperature versus Time')
+
+# Graph annotations labels and lines
+max_temp = max(temp) # find max temp
+max_temp_time = time[temp.index(max_temp)] # find time at max temp
+max_temp_label = 'Maximum Temperature ('+str(max_temp)+'°C)'
+
+start_temp = temp[0]
+start_temp_label ='Start Temperature ('+str(start_temp)+'°C)'  # Format the value as desired
+
+
+# Text/Legend on graph
+
+plt.scatter(time[0], temp[0], color='green', marker='s',label=start_temp_label)
+plt.scatter(max_temp_time, max_temp, color='red', marker='x',label=max_temp_label)
+plt.scatter(target_time_2,target_temp_2, color='black', marker='x',label='Stabilisation Point')
+
+
+# Show the plot
+ax.plot(time, temp,label ='profile')
+plt.legend()
+plt.show()
+
